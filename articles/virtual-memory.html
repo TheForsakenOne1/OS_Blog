@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Memory and Page Replacement Algorithms | OS Interview Prep</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="../index.html" class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="#FF5A5F"/>
+                        <path d="M16 8L8 14V24H13V18H19V24H24V14L16 8Z" fill="white"/>
+                    </svg>
+                    <span>OS Interview Prep</span>
+                </a>
+                <div class="nav-links">
+                    <a href="../index.html" class="nav-link">Articles</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="article-hero" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+        <div class="container">
+            <div class="article-hero-content">
+                <div class="breadcrumb">
+                    <a href="../index.html">Home</a>
+                    <span>/</span>
+                    <span>Virtual Memory</span>
+                </div>
+                <h1 class="article-page-title">Virtual Memory and Page Replacement Algorithms</h1>
+                <div class="article-page-meta">
+                    <span>13 min read</span>
+                    <span>•</span>
+                    <span>Virtual Memory</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <article class="article-body">
+        <div class="article-section">
+            <h2>Introduction</h2>
+            <p>Virtual memory is a memory management technique that provides an idealized abstraction of storage. It allows programs to use more memory than physically available and enables efficient process execution even when only partially loaded in memory.</p>
+
+            <div class="info-box">
+                <h4>Key Benefit</h4>
+                <p>Virtual memory separates logical memory (programmer's view) from physical memory (actual RAM). This separation provides enormous flexibility in memory management!</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Demand Paging</h2>
+            <p>The foundation of virtual memory. Pages are loaded into memory only when they are demanded during program execution.</p>
+
+            <h3>How It Works</h3>
+            <ul>
+                <li>Process starts with no pages in memory</li>
+                <li>Pages are brought into memory only when referenced</li>
+                <li>Uses <strong>lazy loading</strong> strategy</li>
+                <li>Requires hardware support: valid-invalid bit</li>
+            </ul>
+
+            <h3>Valid-Invalid Bit</h3>
+            <div class="code-block">
+Valid (v): Page is in memory
+Invalid (i): Page is not in memory or not in logical address space
+
+Initially all entries are set to invalid
+When page is brought into memory, bit is set to valid
+            </div>
+
+            <h3>Page Fault</h3>
+            <p>When a process tries to access a page not in memory:</p>
+            <div class="code-block">
+1. Reference to page with invalid bit causes page fault
+2. OS checks internal table:
+   - Invalid reference? → Abort process
+   - Valid but not in memory? → Bring it in
+3. Find free frame
+4. Read page from disk into frame
+5. Update page table (set valid bit)
+6. Restart instruction that caused page fault
+            </div>
+
+            <h3>Performance Impact</h3>
+            <div class="code-block">
+Memory access time = 200 nanoseconds
+Page fault time = 8 milliseconds = 8,000,000 ns
+
+EAT = (1 - p) × 200 + p × 8,000,000
+where p = page fault rate
+
+If p = 0.001 (1 fault per 1000 accesses):
+EAT = 0.999 × 200 + 0.001 × 8,000,000
+    = 199.8 + 8,000
+    = 8,199.8 ns (40x slower!)
+
+To keep degradation < 10%:
+Need p < 0.0000025 (1 in 400,000)
+            </div>
+
+            <div class="highlight-box">
+                <h4>Critical Point</h4>
+                <p>Page fault rate has HUGE impact on performance. Even very low page fault rates can significantly slow down the system!</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Page Replacement Algorithms</h2>
+            <p>When a page fault occurs and no free frames are available, we must select a victim page to replace.</p>
+
+            <h3>Goal</h3>
+            <p>Minimize page fault rate to achieve best performance.</p>
+
+            <h3>Reference String</h3>
+            <p>Sequence of page numbers accessed by a process. Used to evaluate page replacement algorithms.</p>
+            <div class="code-block">
+Example: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1
+
+With 3 frames, how many page faults occur with different algorithms?
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>1. FIFO (First-In-First-Out)</h2>
+
+            <h3>Algorithm</h3>
+            <ul>
+                <li>Replace the oldest page (first one brought in)</li>
+                <li>Easy to implement using a queue</li>
+                <li>Fair but not optimal</li>
+            </ul>
+
+            <h3>Example</h3>
+            <div class="code-block">
+Reference String: 1, 2, 3, 4, 1, 2, 5, 1, 2, 3, 4, 5
+Frames: 3
+
+Step-by-step:
+1: [1] - Fault
+2: [1,2] - Fault
+3: [1,2,3] - Fault
+4: [4,2,3] - Fault (replace 1)
+1: [4,1,3] - Fault (replace 2)
+2: [4,1,2] - Fault (replace 3)
+5: [5,1,2] - Fault (replace 4)
+1: [5,1,2] - Hit
+2: [5,1,2] - Hit
+3: [5,3,2] - Fault (replace 1)
+4: [5,3,4] - Fault (replace 2)
+5: [5,3,4] - Hit
+
+Total: 9 page faults
+            </div>
+
+            <h3>Belady's Anomaly</h3>
+            <div class="highlight-box">
+                <h4>Surprising Finding!</h4>
+                <p>For some page reference strings, increasing the number of frames can INCREASE page faults! This is unique to FIFO.</p>
+                <p>Example: With 3 frames = 9 faults, but with 4 frames = 10 faults!</p>
+            </div>
+
+            <h3>Pros and Cons</h3>
+            <ul>
+                <li>✅ Simple to implement</li>
+                <li>✅ Fair (all pages get equal chance)</li>
+                <li>❌ Poor performance (doesn't consider usage patterns)</li>
+                <li>❌ Suffers from Belady's Anomaly</li>
+                <li>❌ May replace frequently used pages</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>2. Optimal Page Replacement</h2>
+
+            <h3>Algorithm</h3>
+            <ul>
+                <li>Replace page that will not be used for longest time in future</li>
+                <li>Guarantees lowest page fault rate</li>
+                <li>Used as benchmark to compare other algorithms</li>
+            </ul>
+
+            <h3>Example</h3>
+            <div class="code-block">
+Reference String: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2
+Frames: 3
+
+Step-by-step:
+7: [7] - Fault
+0: [7,0] - Fault
+1: [7,0,1] - Fault
+2: [2,0,1] - Fault (replace 7, won't be used until far future)
+0: [2,0,1] - Hit
+3: [2,0,3] - Fault (replace 1, used farthest in future)
+0: [2,0,3] - Hit
+4: [4,0,3] - Fault (replace 2, will be used next, so keep 0 and 3)
+2: [4,0,2] - Fault (replace 3)
+3: [4,3,2] - Fault (replace 0)
+0: [0,3,2] - Fault (replace 4)
+3: [0,3,2] - Hit
+2: [0,3,2] - Hit
+
+Total: 9 page faults (optimal!)
+            </div>
+
+            <h3>The Problem</h3>
+            <div class="info-box">
+                <h4>Not Implementable!</h4>
+                <p>Optimal algorithm requires knowledge of future page references, which is impossible in practice. It's used only as a theoretical benchmark.</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>3. LRU (Least Recently Used)</h2>
+
+            <h3>Algorithm</h3>
+            <ul>
+                <li>Replace page that hasn't been used for longest time</li>
+                <li>Based on principle of locality</li>
+                <li>Approximates optimal algorithm using past instead of future</li>
+                <li>Does not suffer from Belady's Anomaly</li>
+            </ul>
+
+            <h3>Example</h3>
+            <div class="code-block">
+Reference String: 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2
+Frames: 3
+
+7: [7] - Fault
+0: [7,0] - Fault
+1: [7,0,1] - Fault
+2: [2,0,1] - Fault (replace 7, LRU)
+0: [2,0,1] - Hit
+3: [2,0,3] - Fault (replace 1, LRU)
+0: [2,0,3] - Hit
+4: [4,0,3] - Fault (replace 2, LRU)
+2: [4,0,2] - Fault (replace 3, LRU)
+3: [4,3,2] - Fault (replace 0, LRU)
+0: [0,3,2] - Fault (replace 4, LRU)
+3: [0,3,2] - Hit
+2: [0,3,2] - Hit
+
+Total: 9-10 page faults (near optimal!)
+            </div>
+
+            <h3>Implementation Methods</h3>
+
+            <p><strong>1. Counter Implementation:</strong></p>
+            <ul>
+                <li>Associate counter with each page table entry</li>
+                <li>Increment counter on each memory reference</li>
+                <li>Replace page with smallest counter</li>
+                <li>❌ Requires searching all counters</li>
+                <li>❌ Overflow issues</li>
+            </ul>
+
+            <p><strong>2. Stack Implementation:</strong></p>
+            <ul>
+                <li>Keep stack of page numbers</li>
+                <li>When page referenced, move to top</li>
+                <li>LRU page is always at bottom</li>
+                <li>✅ No search needed</li>
+                <li>❌ Expensive to update (need to change pointers)</li>
+            </ul>
+
+            <h3>Pros and Cons</h3>
+            <ul>
+                <li>✅ Excellent performance (close to optimal)</li>
+                <li>✅ No Belady's Anomaly</li>
+                <li>✅ Exploits temporal locality</li>
+                <li>❌ Expensive to implement exactly</li>
+                <li>❌ Requires hardware support</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>4. LRU Approximation Algorithms</h2>
+            <p>Since true LRU is expensive, systems use approximations.</p>
+
+            <h3>Reference Bit Algorithm</h3>
+            <ul>
+                <li>Each page has a reference bit</li>
+                <li>Initially all bits = 0</li>
+                <li>When page referenced, bit set to 1</li>
+                <li>Replace any page with reference bit = 0</li>
+                <li>Don't know the order of use</li>
+            </ul>
+
+            <h3>Second-Chance (Clock) Algorithm</h3>
+            <ul>
+                <li>FIFO with reference bit</li>
+                <li>When page selected for replacement:
+                    <ul>
+                        <li>If reference bit = 0 → Replace</li>
+                        <li>If reference bit = 1 → Give second chance (set bit to 0, move to end)</li>
+                    </ul>
+                </li>
+                <li>Uses circular queue (clock hand)</li>
+            </ul>
+
+            <div class="code-block">
+Example:
+Pages: A(1), B(0), C(1), D(0)
+Clock hand at A
+
+Need to replace:
+A: bit=1 → Set to 0, move hand to B
+B: bit=0 → Replace B!
+            </div>
+
+            <h3>Enhanced Second-Chance</h3>
+            <p>Uses both reference bit and modify bit: (reference, modify)</p>
+            <div class="code-block">
+Priority (best to worst):
+(0, 0): Not recently used, not modified - BEST
+(0, 1): Not recently used, but modified
+(1, 0): Recently used, not modified
+(1, 1): Recently used and modified - WORST
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>5. Counting Algorithms</h2>
+
+            <h3>LFU (Least Frequently Used)</h3>
+            <ul>
+                <li>Replace page with smallest count</li>
+                <li>Intuition: Actively used pages have large reference counts</li>
+                <li>❌ Problem: Page used heavily initially but not now has high count</li>
+            </ul>
+
+            <h3>MFU (Most Frequently Used)</h3>
+            <ul>
+                <li>Replace page with largest count</li>
+                <li>Intuition: Page with smallest count probably just brought in</li>
+                <li>❌ Generally worse than LFU</li>
+            </ul>
+
+            <p>Both are expensive and not commonly used.</p>
+        </div>
+
+        <div class="article-section">
+            <h2>Thrashing</h2>
+            <p>When a process spends more time paging than executing.</p>
+
+            <h3>Cause</h3>
+            <ul>
+                <li>Process doesn't have enough frames</li>
+                <li>Page fault → Replace page → Fault on replaced page → Replace again</li>
+                <li>CPU utilization drops</li>
+                <li>OS thinks it needs more multiprogramming</li>
+                <li>Adds more processes → More thrashing!</li>
+            </ul>
+
+            <div class="highlight-box">
+                <h4>Death Spiral</h4>
+                <p>Low CPU utilization → Add more processes → Even more page faults → Even lower CPU utilization → System grinds to halt!</p>
+            </div>
+
+            <h3>Solution 1: Working Set Model</h3>
+            <ul>
+                <li><strong>Working Set:</strong> Set of pages currently being used</li>
+                <li>Based on principle of locality</li>
+                <li>Working set window (Δ): Most recent page references</li>
+                <li>If total working set > total frames → Thrashing</li>
+                <li><strong>Action:</strong> Suspend some processes</li>
+            </ul>
+
+            <h3>Solution 2: Page Fault Frequency (PFF)</h3>
+            <ul>
+                <li>Monitor page fault rate</li>
+                <li>If too high → Allocate more frames</li>
+                <li>If too low → Remove frames</li>
+                <li>If can't allocate more frames → Suspend process</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Frame Allocation</h2>
+
+            <h3>Minimum Number of Frames</h3>
+            <p>Must allocate enough frames to hold all pages referenced by a single instruction!</p>
+
+            <h3>Allocation Algorithms</h3>
+
+            <p><strong>Equal Allocation:</strong></p>
+            <div class="code-block">
+m frames, n processes
+Each process gets m/n frames
+Simple but ignores process sizes
+            </div>
+
+            <p><strong>Proportional Allocation:</strong></p>
+            <div class="code-block">
+Process size: si
+Total size: S = Σ si
+
+Frames for process pi = (si / S) × m
+
+Example:
+Process 1: 64KB
+Process 2: 128KB
+Total frames: 64
+
+P1 gets: (64/192) × 64 = 21 frames
+P2 gets: (128/192) × 64 = 43 frames
+            </div>
+
+            <h3>Global vs Local Replacement</h3>
+            <ul>
+                <li><strong>Global:</strong> Process can select replacement from all frames
+                    <ul>
+                        <li>✅ Better throughput</li>
+                        <li>❌ Process can't control its own page fault rate</li>
+                    </ul>
+                </li>
+                <li><strong>Local:</strong> Process selects only from its own frames
+                    <ul>
+                        <li>✅ Predictable performance</li>
+                        <li>❌ Possibly underutilizes memory</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Common Interview Questions</h2>
+
+            <h3>1. What is the difference between paging and virtual memory?</h3>
+            <p><strong>Answer:</strong> Paging is a memory management technique that eliminates external fragmentation by using fixed-size pages. Virtual memory is a broader concept that allows execution of processes not completely in memory, using paging or segmentation as implementation techniques. Virtual memory provides the abstraction of unlimited memory.</p>
+
+            <h3>2. Why is LRU better than FIFO?</h3>
+            <p><strong>Answer:</strong> LRU exploits temporal locality - recently used pages are likely to be used again. FIFO ignores usage patterns and may replace frequently used pages just because they're old. LRU doesn't suffer from Belady's Anomaly.</p>
+
+            <h3>3. Why can't we implement optimal page replacement?</h3>
+            <p><strong>Answer:</strong> Optimal algorithm requires knowledge of future page references, which is impossible to know in advance. It's only used as a theoretical benchmark.</p>
+
+            <h3>4. What is thrashing and how do you detect it?</h3>
+            <p><strong>Answer:</strong> Thrashing occurs when a process spends more time paging than executing. Detect by monitoring: high page fault rate, low CPU utilization, high disk I/O for paging. Solutions include working set model or page fault frequency scheme.</p>
+
+            <h3>5. What is demand paging?</h3>
+            <p><strong>Answer:</strong> Demand paging loads pages into memory only when they're needed (demanded), rather than loading entire program at startup. It's the foundation of virtual memory and enables running programs larger than physical memory.</p>
+        </div>
+
+        <div class="article-section">
+            <h2>Algorithm Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Performance</th>
+                        <th>Implementation</th>
+                        <th>Belady's Anomaly</th>
+                        <th>Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>FIFO</td>
+                        <td>Poor</td>
+                        <td>Easy</td>
+                        <td>Yes</td>
+                        <td>Rarely</td>
+                    </tr>
+                    <tr>
+                        <td>Optimal</td>
+                        <td>Best</td>
+                        <td>Impossible</td>
+                        <td>No</td>
+                        <td>Benchmark only</td>
+                    </tr>
+                    <tr>
+                        <td>LRU</td>
+                        <td>Excellent</td>
+                        <td>Expensive</td>
+                        <td>No</td>
+                        <td>Common (approximated)</td>
+                    </tr>
+                    <tr>
+                        <td>Second-Chance</td>
+                        <td>Good</td>
+                        <td>Moderate</td>
+                        <td>No</td>
+                        <td>Very common</td>
+                    </tr>
+                    <tr>
+                        <td>LFU/MFU</td>
+                        <td>Variable</td>
+                        <td>Expensive</td>
+                        <td>No</td>
+                        <td>Rare</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="article-section">
+            <h2>Summary</h2>
+            <p>Virtual memory is a powerful abstraction:</p>
+            <ul>
+                <li><strong>Demand paging:</strong> Load pages only when needed</li>
+                <li><strong>Page replacement:</strong> Critical when physical memory full</li>
+                <li><strong>LRU:</strong> Best practical algorithm (approximated in real systems)</li>
+                <li><strong>Thrashing:</strong> Major performance issue, needs careful management</li>
+                <li><strong>Modern systems:</strong> Use LRU approximations like Second-Chance/Clock</li>
+            </ul>
+        </div>
+
+        <a href="../index.html" class="back-link">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Articles
+        </a>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 OS Interview Prep. Built with passion for learning.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

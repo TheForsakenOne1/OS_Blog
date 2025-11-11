@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadlock: Detection, Prevention & Recovery | OS Interview Prep</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="../index.html" class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="#FF5A5F"/>
+                        <path d="M16 8L8 14V24H13V18H19V24H24V14L16 8Z" fill="white"/>
+                    </svg>
+                    <span>OS Interview Prep</span>
+                </a>
+                <div class="nav-links">
+                    <a href="../index.html" class="nav-link">Articles</a>
+                    <a href="#about" class="nav-link">About</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="article-hero" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <div class="container">
+            <div class="article-hero-content">
+                <div class="breadcrumb">
+                    <a href="../index.html">Home</a>
+                    <span>/</span>
+                    <span>Deadlock</span>
+                </div>
+                <h1 class="article-page-title">Deadlock: Detection, Prevention & Recovery</h1>
+                <div class="article-page-meta">
+                    <span>12 min read</span>
+                    <span>•</span>
+                    <span>Deadlock</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <article class="article-body">
+        <div class="article-section">
+            <h2>Introduction</h2>
+            <p>Deadlock is one of the most critical problems in operating systems and concurrent programming. It occurs when a set of processes are blocked, each waiting for a resource held by another process in the set. Understanding deadlock is essential for system design and is a favorite interview topic.</p>
+
+            <div class="info-box">
+                <h4>Real-World Analogy</h4>
+                <p>Imagine a narrow bridge where cars can only go one direction at a time. If two cars enter from opposite ends simultaneously and meet in the middle, neither can proceed. They're deadlocked!</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Necessary Conditions for Deadlock</h2>
+            <p>A deadlock situation can arise if and only if ALL four conditions hold simultaneously:</p>
+
+            <h3>1. Mutual Exclusion</h3>
+            <ul>
+                <li>At least one resource must be held in a non-sharable mode</li>
+                <li>Only one process can use the resource at a time</li>
+                <li>Example: A printer can only be used by one process at a time</li>
+            </ul>
+
+            <h3>2. Hold and Wait</h3>
+            <ul>
+                <li>A process must be holding at least one resource</li>
+                <li>And waiting to acquire additional resources held by other processes</li>
+                <li>Example: Process P1 holds Resource A and waits for Resource B</li>
+            </ul>
+
+            <h3>3. No Preemption</h3>
+            <ul>
+                <li>Resources cannot be forcibly taken from a process</li>
+                <li>Resources are released only voluntarily by the process holding them</li>
+                <li>Example: A process holding a file lock cannot be forced to release it</li>
+            </ul>
+
+            <h3>4. Circular Wait</h3>
+            <ul>
+                <li>There exists a circular chain of processes</li>
+                <li>Each process holds a resource needed by the next process in the chain</li>
+                <li>Example: P1 waits for P2, P2 waits for P3, P3 waits for P1</li>
+            </ul>
+
+            <div class="highlight-box">
+                <h4>Important Note</h4>
+                <p>All four conditions must be present for deadlock to occur. If you can prevent even one of these conditions, you can prevent deadlock!</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Resource Allocation Graph (RAG)</h2>
+            <p>A visual tool to detect deadlock. The graph contains two types of nodes:</p>
+            <ul>
+                <li><strong>Process nodes:</strong> Represented as circles (P1, P2, etc.)</li>
+                <li><strong>Resource nodes:</strong> Represented as rectangles (R1, R2, etc.)</li>
+            </ul>
+
+            <h3>Types of Edges</h3>
+            <ul>
+                <li><strong>Request Edge:</strong> Directed edge from process to resource (Pi → Rj) - process requests resource</li>
+                <li><strong>Assignment Edge:</strong> Directed edge from resource to process (Rj → Pi) - resource assigned to process</li>
+            </ul>
+
+            <h3>Detecting Deadlock with RAG</h3>
+            <div class="code-block">
+If graph contains NO cycles → No deadlock
+
+If graph contains a cycle:
+  - If only one instance per resource type → Deadlock
+  - If multiple instances → Possibility of deadlock
+            </div>
+
+            <div class="info-box">
+                <h4>Example Deadlock Scenario</h4>
+                <p>P1 holds R1, requests R2<br>
+                P2 holds R2, requests R1<br><br>
+                This creates a cycle: P1 → R2 → P2 → R1 → P1<br>
+                Result: DEADLOCK!</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Deadlock Prevention</h2>
+            <p>Prevent deadlock by ensuring at least one of the four necessary conditions cannot hold.</p>
+
+            <h3>1. Prevent Mutual Exclusion</h3>
+            <ul>
+                <li><strong>Approach:</strong> Make resources sharable</li>
+                <li><strong>Problem:</strong> Not possible for non-sharable resources (printers, locks)</li>
+                <li><strong>Example:</strong> Read-only files can be shared, but write access cannot</li>
+            </ul>
+
+            <h3>2. Prevent Hold and Wait</h3>
+            <p><strong>Method 1:</strong> Require processes to request all resources at once</p>
+            <ul>
+                <li>✅ Prevents deadlock</li>
+                <li>❌ Low resource utilization (resources held unnecessarily)</li>
+                <li>❌ Starvation possible (process waiting for multiple resources)</li>
+            </ul>
+
+            <p><strong>Method 2:</strong> Require process to release all held resources before requesting new ones</p>
+            <ul>
+                <li>✅ Prevents deadlock</li>
+                <li>❌ Resources may be needed throughout execution</li>
+            </ul>
+
+            <h3>3. Prevent No Preemption</h3>
+            <p>Allow resource preemption:</p>
+            <ul>
+                <li>If a process requests a resource that cannot be immediately allocated, it releases all currently held resources</li>
+                <li>Resources are added to the list of resources the process is waiting for</li>
+                <li>Process restarts only when it can acquire all needed resources</li>
+                <li><strong>Issue:</strong> Only applicable to resources whose state can be saved/restored (CPU, memory), not for printers or mutex locks</li>
+            </ul>
+
+            <h3>4. Prevent Circular Wait</h3>
+            <p><strong>Method:</strong> Impose total ordering on resource types</p>
+            <div class="code-block">
+Example: Assign numbers to resources (R1=1, R2=2, R3=3, etc.)
+
+Rule: Process must request resources in increasing order
+
+If process needs R1 and R5:
+  ✅ Request R1 first, then R5
+  ❌ Cannot request R5 first, then R1
+
+This prevents circular wait!
+            </div>
+
+            <ul>
+                <li>✅ Practically implementable</li>
+                <li>❌ May be inconvenient for programmers</li>
+                <li>❌ Resource numbering must be carefully designed</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Deadlock Avoidance</h2>
+            <p>Requires additional information about how resources will be requested. The most famous algorithm is the Banker's Algorithm.</p>
+
+            <h3>Banker's Algorithm</h3>
+            <p>Named after the banking system where banks never allocate all cash to customers simultaneously. The algorithm ensures the system stays in a "safe state."</p>
+
+            <h3>Key Concepts</h3>
+            <ul>
+                <li><strong>Safe State:</strong> System can allocate resources to each process in some order and avoid deadlock</li>
+                <li><strong>Unsafe State:</strong> No guarantee that deadlock can be avoided</li>
+                <li><strong>Safe Sequence:</strong> Order of process execution that avoids deadlock</li>
+            </ul>
+
+            <h3>Data Structures</h3>
+            <div class="code-block">
+n = number of processes
+m = number of resource types
+
+Available[m]: Available instances of each resource
+Max[n][m]: Maximum demand of each process
+Allocation[n][m]: Currently allocated resources to each process
+Need[n][m]: Remaining resource need of each process
+
+Need[i][j] = Max[i][j] - Allocation[i][j]
+            </div>
+
+            <h3>Safety Algorithm</h3>
+            <div class="code-block">
+1. Initialize:
+   Work = Available
+   Finish[i] = false for all i
+
+2. Find an index i such that:
+   Finish[i] == false AND Need[i] <= Work
+
+   If no such i exists, go to step 4
+
+3. Work = Work + Allocation[i]
+   Finish[i] = true
+   Go to step 2
+
+4. If Finish[i] == true for all i:
+      System is in SAFE state
+   Else:
+      System is in UNSAFE state
+            </div>
+
+            <h3>Example</h3>
+            <div class="code-block">
+Processes: P0, P1, P2, P3, P4
+Resources: A=10, B=5, C=7
+
+       Allocation    Max      Need      Available
+       A  B  C      A B C    A B C      A B C
+P0     0  1  0      7 5 3    7 4 3      3 3 2
+P1     2  0  0      3 2 2    1 2 2
+P2     3  0  2      9 0 2    6 0 0
+P3     2  1  1      2 2 2    0 1 1
+P4     0  0  2      4 3 3    4 3 1
+
+Safe Sequence: P1 → P3 → P4 → P2 → P0
+Therefore, system is in SAFE state!
+            </div>
+
+            <h3>Pros and Cons</h3>
+            <ul>
+                <li>✅ No deadlock can occur</li>
+                <li>✅ Maximum resource utilization possible</li>
+                <li>❌ Requires advance knowledge of maximum resource needs</li>
+                <li>❌ Number of processes must be fixed</li>
+                <li>❌ Resources must be fixed</li>
+                <li>❌ High overhead for checking safety</li>
+                <li>❌ Rarely used in practice</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Deadlock Detection</h2>
+            <p>Allow deadlock to occur, but detect and recover from it.</p>
+
+            <h3>Single Instance Resources</h3>
+            <p>Use wait-for graph (variant of RAG):</p>
+            <ul>
+                <li>Remove resource nodes</li>
+                <li>Direct edges from Pi to Pj if Pi is waiting for a resource held by Pj</li>
+                <li>Deadlock exists if and only if graph contains a cycle</li>
+                <li>Detection: Run cycle detection algorithm periodically (O(n²) time)</li>
+            </ul>
+
+            <h3>Multiple Instance Resources</h3>
+            <p>Similar to Banker's algorithm but without Need matrix:</p>
+            <div class="code-block">
+Available[m]: Available instances
+Allocation[n][m]: Current allocation
+Request[n][m]: Current requests
+
+Detection algorithm similar to safety algorithm
+            </div>
+
+            <h3>When to Invoke Detection</h3>
+            <ul>
+                <li><strong>Frequency:</strong> How often to check for deadlock</li>
+                <li><strong>Trade-off:</strong> Frequent checks = high overhead, Infrequent = delayed detection</li>
+                <li><strong>Strategies:</strong>
+                    <ul>
+                        <li>Every time a request cannot be granted</li>
+                        <li>At fixed time intervals</li>
+                        <li>When CPU utilization drops below threshold</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Deadlock Recovery</h2>
+            <p>Once deadlock is detected, we need to recover from it.</p>
+
+            <h3>1. Process Termination</h3>
+
+            <p><strong>Option A: Abort all deadlocked processes</strong></p>
+            <ul>
+                <li>✅ Simple and effective</li>
+                <li>❌ Significant cost - processes lose all computation done so far</li>
+            </ul>
+
+            <p><strong>Option B: Abort one process at a time</strong></p>
+            <ul>
+                <li>Abort processes one by one until deadlock cycle is eliminated</li>
+                <li>After each abort, rerun detection algorithm</li>
+                <li>❌ High overhead (detection after each abortion)</li>
+            </ul>
+
+            <h3>Process Selection Criteria</h3>
+            <p>Which process to abort? Consider:</p>
+            <ul>
+                <li>Process priority</li>
+                <li>How long process has executed</li>
+                <li>Resources used and needed</li>
+                <li>Number of processes to be terminated</li>
+                <li>Interactive vs batch process</li>
+            </ul>
+
+            <h3>2. Resource Preemption</h3>
+            <p>Take resources from some processes and give to others.</p>
+
+            <h3>Three Issues to Address</h3>
+
+            <p><strong>a) Selecting a Victim:</strong></p>
+            <ul>
+                <li>Which resources and which processes to preempt?</li>
+                <li>Minimize cost (number of resources, execution time)</li>
+            </ul>
+
+            <p><strong>b) Rollback:</strong></p>
+            <ul>
+                <li>If resource is preempted from a process, what to do with that process?</li>
+                <li><strong>Total rollback:</strong> Restart process from beginning</li>
+                <li><strong>Partial rollback:</strong> Roll back to safe state</li>
+                <li>Requires system to maintain state information</li>
+            </ul>
+
+            <p><strong>c) Starvation:</strong></p>
+            <ul>
+                <li>How to ensure the same process is not always picked as victim?</li>
+                <li><strong>Solution:</strong> Include number of rollbacks in cost factor</li>
+                <li>Limit rollbacks per process</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Combined Approach</h2>
+            <p>Many systems use different strategies for different resource types:</p>
+
+            <div class="code-block">
+Resource Type          Strategy
+------------------------------------------
+Internal resources     Prevention via ordering
+(CPU, memory)
+
+Main memory           Avoidance via Banker's
+
+Job resources         Avoidance
+(files, databases)
+
+PCB, semaphores       Prevention
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Common Interview Questions</h2>
+
+            <h3>1. Can deadlock occur with only one process?</h3>
+            <p><strong>Answer:</strong> No. Deadlock requires circular wait, which needs at least two processes.</p>
+
+            <h3>2. What's the difference between deadlock prevention and avoidance?</h3>
+            <p><strong>Answer:</strong> Prevention ensures at least one necessary condition for deadlock cannot hold (restricts resource requests). Avoidance allows all conditions but makes intelligent resource allocation decisions using future knowledge (like Banker's algorithm).</p>
+
+            <h3>3. Why is Banker's algorithm not commonly used in practice?</h3>
+            <p><strong>Answer:</strong> Because it requires:
+            <ul>
+                <li>Fixed number of processes</li>
+                <li>Fixed number of resources</li>
+                <li>Processes to declare maximum needs in advance</li>
+                <li>High computational overhead</li>
+            </ul>
+            These requirements are rarely met in real systems.</p>
+
+            <h3>4. What does "safe state" mean?</h3>
+            <p><strong>Answer:</strong> A state where the system can allocate resources to each process in some order and still avoid deadlock. There exists at least one safe sequence. Note: Safe state ≠ No deadlock currently, it means deadlock can be avoided.</p>
+
+            <h3>5. How does the Ostrich algorithm handle deadlock?</h3>
+            <p><strong>Answer:</strong> It ignores the problem! Used when deadlock is very rare, and the cost of prevention/avoidance/detection is higher than occasionally rebooting the system. Many operating systems (including UNIX) use this for certain resource types.</p>
+        </div>
+
+        <div class="article-section">
+            <h2>Summary</h2>
+            <p>Deadlock handling strategies:</p>
+            <ul>
+                <li><strong>Ignore:</strong> Ostrich algorithm (used when rare)</li>
+                <li><strong>Prevention:</strong> Negate one of four necessary conditions</li>
+                <li><strong>Avoidance:</strong> Use Banker's algorithm (requires future knowledge)</li>
+                <li><strong>Detection & Recovery:</strong> Allow deadlock, detect, and fix</li>
+            </ul>
+            <p>Most real systems use a combination of approaches for different resource types!</p>
+        </div>
+
+        <a href="../index.html" class="back-link">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Articles
+        </a>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>OS Interview Prep</h3>
+                    <p>Your comprehensive guide to mastering operating systems concepts for technical interviews.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="#processes">Processes & Threads</a></li>
+                        <li><a href="#scheduling">CPU Scheduling</a></li>
+                        <li><a href="#memory">Memory Management</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 OS Interview Prep. Built with passion for learning.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

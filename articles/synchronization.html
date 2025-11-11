@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Synchronization: Semaphores, Mutexes & Monitors | OS Interview Prep</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <a href="../index.html" class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="#FF5A5F"/>
+                        <path d="M16 8L8 14V24H13V18H19V24H24V14L16 8Z" fill="white"/>
+                    </svg>
+                    <span>OS Interview Prep</span>
+                </a>
+                <div class="nav-links">
+                    <a href="../index.html" class="nav-link">Articles</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="article-hero" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+        <div class="container">
+            <div class="article-hero-content">
+                <div class="breadcrumb">
+                    <a href="../index.html">Home</a>
+                    <span>/</span>
+                    <span>Synchronization</span>
+                </div>
+                <h1 class="article-page-title">Process Synchronization: Semaphores, Mutexes & Monitors</h1>
+                <div class="article-page-meta">
+                    <span>14 min read</span>
+                    <span>•</span>
+                    <span>Synchronization</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <article class="article-body">
+        <div class="article-section">
+            <h2>Introduction</h2>
+            <p>Process synchronization is crucial in multi-threaded and multi-process systems. When multiple processes/threads access shared data concurrently, we need synchronization mechanisms to ensure data consistency and prevent race conditions.</p>
+
+            <div class="info-box">
+                <h4>Why Synchronization?</h4>
+                <p>Without proper synchronization, concurrent access to shared resources can lead to:
+                <ul>
+                    <li>Race conditions</li>
+                    <li>Data inconsistency</li>
+                    <li>Unpredictable results</li>
+                    <li>System crashes</li>
+                </ul>
+                </p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>The Critical Section Problem</h2>
+
+            <h3>What is a Critical Section?</h3>
+            <p>A segment of code where a process accesses shared resources (variables, files, etc.). Only one process should execute in its critical section at a time.</p>
+
+            <h3>Structure of a Process</h3>
+            <div class="code-block">
+do {
+    // Entry Section - Request permission to enter CS
+
+    // Critical Section - Access shared resource
+
+    // Exit Section - Release access
+
+    // Remainder Section - Other code
+
+} while (true);
+            </div>
+
+            <h3>Requirements for Solution</h3>
+
+            <h3>1. Mutual Exclusion</h3>
+            <ul>
+                <li>Only one process in critical section at a time</li>
+                <li>If process P is in CS, no other process can be in their CS</li>
+                <li>Essential for correctness</li>
+            </ul>
+
+            <h3>2. Progress</h3>
+            <ul>
+                <li>If no process in CS and some want to enter, selection cannot be postponed indefinitely</li>
+                <li>Only processes not in remainder section can participate in decision</li>
+                <li>Decision must be made in finite time</li>
+            </ul>
+
+            <h3>3. Bounded Waiting</h3>
+            <ul>
+                <li>Limit on how many times other processes can enter CS after a process requests entry</li>
+                <li>Prevents starvation</li>
+                <li>Ensures fairness</li>
+            </ul>
+
+            <div class="highlight-box">
+                <h4>All Three Must Be Satisfied!</h4>
+                <p>A correct synchronization solution must satisfy all three requirements: mutual exclusion, progress, and bounded waiting.</p>
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Race Condition</h2>
+
+            <h3>Example: Bank Account</h3>
+            <div class="code-block">
+Initial balance = $100
+
+Thread 1: Withdraw $50          Thread 2: Withdraw $30
+1. Read balance (100)           1. Read balance (100)
+2. Subtract 50                  2. Subtract 30
+3. Write balance (50)           3. Write balance (70)
+
+Final balance could be $50 or $70 (should be $20!)
+This is a race condition!
+            </div>
+
+            <h3>The Problem</h3>
+            <p>Operations like "balance = balance - amount" are not atomic. They consist of:</p>
+            <div class="code-block">
+1. LOAD balance into register
+2. SUBTRACT amount from register
+3. STORE register into balance
+
+If these are interleaved between threads, inconsistency occurs!
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Peterson's Solution</h2>
+            <p>A classic software-based solution for 2 processes (not practical but educationally important).</p>
+
+            <div class="code-block">
+Shared variables:
+int turn;        // Whose turn to enter CS
+bool flag[2];    // flag[i] = true means process i ready to enter CS
+
+Process i:
+flag[i] = true;         // I want to enter
+turn = j;               // Give turn to other process
+while (flag[j] && turn == j)
+    ; // busy wait
+
+// Critical Section
+
+flag[i] = false;        // I'm done
+
+// Remainder Section
+            </div>
+
+            <h3>Why It Works</h3>
+            <ul>
+                <li><strong>Mutual Exclusion:</strong> Both processes set turn to different values, only one succeeds</li>
+                <li><strong>Progress:</strong> If one process not interested (flag[j]=false), other enters</li>
+                <li><strong>Bounded Waiting:</strong> After one process exits, other gets turn</li>
+            </ul>
+
+            <h3>Limitations</h3>
+            <ul>
+                <li>Only works for 2 processes</li>
+                <li>Busy waiting (wastes CPU)</li>
+                <li>Requires special memory ordering on modern CPUs</li>
+                <li>Not used in practice</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Semaphores</h2>
+            <p>A synchronization tool provided by the operating system. Most widely used synchronization mechanism.</p>
+
+            <h3>What is a Semaphore?</h3>
+            <ul>
+                <li>Integer variable accessed via two atomic operations</li>
+                <li>wait() (also called P() or down())</li>
+                <li>signal() (also called V() or up())</li>
+            </ul>
+
+            <h3>Operations</h3>
+            <div class="code-block">
+wait(S) {
+    while (S <= 0)
+        ; // busy wait
+    S--;
+}
+
+signal(S) {
+    S++;
+}
+
+These operations are ATOMIC (indivisible)!
+            </div>
+
+            <h3>Types of Semaphores</h3>
+
+            <h3>1. Binary Semaphore (Mutex)</h3>
+            <ul>
+                <li>Value can be 0 or 1</li>
+                <li>Used for mutual exclusion</li>
+                <li>Similar to a lock</li>
+            </ul>
+
+            <div class="code-block">
+Semaphore mutex = 1;  // Initialize to 1
+
+Process:
+wait(mutex);
+    // Critical Section
+signal(mutex);
+    // Remainder Section
+            </div>
+
+            <h3>2. Counting Semaphore</h3>
+            <ul>
+                <li>Value can range over unrestricted domain</li>
+                <li>Used to control access to resource with multiple instances</li>
+                <li>Example: Pool of database connections</li>
+            </ul>
+
+            <div class="code-block">
+Semaphore resource = 5;  // 5 instances available
+
+Process:
+wait(resource);     // Acquire one instance
+    // Use resource
+signal(resource);   // Release instance
+            </div>
+
+            <h3>Solving Producer-Consumer with Semaphores</h3>
+            <div class="code-block">
+Semaphore mutex = 1;        // Mutual exclusion
+Semaphore empty = N;        // Count empty slots
+Semaphore full = 0;         // Count full slots
+
+Producer:
+while (true) {
+    // Produce item
+    wait(empty);       // Wait for empty slot
+    wait(mutex);       // Enter CS
+    // Add item to buffer
+    signal(mutex);     // Exit CS
+    signal(full);      // Increment full count
+}
+
+Consumer:
+while (true) {
+    wait(full);        // Wait for full slot
+    wait(mutex);       // Enter CS
+    // Remove item from buffer
+    signal(mutex);     // Exit CS
+    signal(empty);     // Increment empty count
+    // Consume item
+}
+            </div>
+
+            <h3>Implementation Without Busy Waiting</h3>
+            <div class="code-block">
+typedef struct {
+    int value;
+    struct process *list;  // Queue of waiting processes
+} semaphore;
+
+wait(semaphore *S) {
+    S->value--;
+    if (S->value < 0) {
+        add this process to S->list;
+        block();  // Put process to sleep
+    }
+}
+
+signal(semaphore *S) {
+    S->value++;
+    if (S->value <= 0) {
+        remove a process P from S->list;
+        wakeup(P);  // Wake up the process
+    }
+}
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Mutex Locks</h2>
+            <p>Simplified version of binary semaphore provided by many systems.</p>
+
+            <div class="code-block">
+bool locked = false;
+
+acquire() {
+    while (locked)
+        ; // busy wait
+    locked = true;
+}
+
+release() {
+    locked = false;
+}
+
+Usage:
+acquire();
+    // Critical Section
+release();
+            </div>
+
+            <h3>Spinlock vs Mutex</h3>
+            <ul>
+                <li><strong>Spinlock:</strong> Busy waits (spins). Good for short critical sections. Used in OS kernels.</li>
+                <li><strong>Mutex with blocking:</strong> Puts process to sleep. Good for longer critical sections. Used in applications.</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Monitors</h2>
+            <p>High-level synchronization construct that provides a convenient and effective mechanism for process synchronization.</p>
+
+            <h3>What is a Monitor?</h3>
+            <ul>
+                <li>Collection of procedures, variables, and data structures grouped in a module</li>
+                <li>Only one process can be active in monitor at a time</li>
+                <li>Mutual exclusion is automatic (enforced by compiler)</li>
+                <li>Used in Java (synchronized methods), C# (lock statement)</li>
+            </ul>
+
+            <h3>Condition Variables</h3>
+            <p>Used to wait for certain conditions within a monitor.</p>
+
+            <div class="code-block">
+condition x;
+
+Operations:
+x.wait()   - Suspend calling process
+x.signal() - Resume one waiting process
+
+If no process waiting, signal has no effect!
+            </div>
+
+            <h3>Example: Producer-Consumer with Monitor</h3>
+            <div class="code-block">
+monitor ProducerConsumer {
+    int buffer[N];
+    int count = 0;
+    condition not_full, not_empty;
+
+    void produce(int item) {
+        if (count == N)
+            not_full.wait();
+        buffer[count++] = item;
+        not_empty.signal();
+    }
+
+    int consume() {
+        if (count == 0)
+            not_empty.wait();
+        int item = buffer[--count];
+        not_full.signal();
+        return item;
+    }
+}
+            </div>
+
+            <h3>Java Example</h3>
+            <div class="code-block">
+public class BankAccount {
+    private int balance = 0;
+
+    public synchronized void deposit(int amount) {
+        balance += amount;
+        notify();  // Wake up waiting thread
+    }
+
+    public synchronized void withdraw(int amount) {
+        while (balance < amount) {
+            try {
+                wait();  // Wait until balance sufficient
+            } catch (InterruptedException e) {}
+        }
+        balance -= amount;
+    }
+}
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Classical Synchronization Problems</h2>
+
+            <h3>1. Readers-Writers Problem</h3>
+            <p>Multiple readers can read simultaneously, but writers need exclusive access.</p>
+
+            <div class="code-block">
+Semaphore mutex = 1;     // Protect read_count
+Semaphore wrt = 1;       // Writer lock
+int read_count = 0;      // Number of readers
+
+Writer:
+wait(wrt);
+    // Write data
+signal(wrt);
+
+Reader:
+wait(mutex);
+    read_count++;
+    if (read_count == 1)
+        wait(wrt);  // First reader blocks writers
+signal(mutex);
+
+    // Read data
+
+wait(mutex);
+    read_count--;
+    if (read_count == 0)
+        signal(wrt);  // Last reader allows writers
+signal(mutex);
+            </div>
+
+            <div class="highlight-box">
+                <h4>Starvation Issue</h4>
+                <p>This solution can starve writers if readers keep arriving. Need to add fairness mechanism!</p>
+            </div>
+
+            <h3>2. Dining Philosophers Problem</h3>
+            <p>5 philosophers sit around a table. Each needs 2 forks to eat. How to prevent deadlock?</p>
+
+            <div class="code-block">
+Problem: If all pick up left fork simultaneously → Deadlock!
+
+Solution 1: Allow max 4 philosophers to sit
+Solution 2: Pick up forks only if both available (atomic)
+Solution 3: Odd philosophers pick left first, even pick right first
+Solution 4: Use semaphore for each philosopher
+            </code-block>
+
+            <h3>3. Sleeping Barber Problem</h3>
+            <p>Barber shop with waiting room. Barber sleeps when no customers, wakes when customer arrives.</p>
+
+            <div class="code-block">
+Semaphore customers = 0;  // Number of waiting customers
+Semaphore barber = 0;     // Barber ready
+Semaphore mutex = 1;      // Protect waiting room
+int waiting = 0;
+
+Barber:
+while (true) {
+    wait(customers);  // Sleep if no customers
+    wait(mutex);
+    waiting--;
+    signal(barber);   // Ready to cut
+    signal(mutex);
+    // Cut hair
+}
+
+Customer:
+wait(mutex);
+if (waiting < CHAIRS) {
+    waiting++;
+    signal(customers);  // Wake barber
+    signal(mutex);
+    wait(barber);       // Wait for barber
+    // Get haircut
+} else {
+    signal(mutex);
+    // Leave (shop full)
+}
+            </div>
+        </div>
+
+        <div class="article-section">
+            <h2>Common Pitfalls</h2>
+
+            <h3>1. Deadlock with Semaphores</h3>
+            <div class="code-block">
+Process P0:          Process P1:
+wait(S);            wait(Q);
+wait(Q);            wait(S);
+...                 ...
+signal(Q);          signal(S);
+signal(S);          signal(Q);
+
+If P0 gets S and P1 gets Q → DEADLOCK!
+            </div>
+
+            <h3>2. Incorrect Order of Operations</h3>
+            <div class="code-block">
+WRONG:
+signal(mutex);  // Exit CS
+wait(mutex);    // Enter CS
+
+Critical section not protected!
+            </div>
+
+            <h3>3. Missing signal()</h3>
+            <div class="code-block">
+wait(mutex);
+// Critical Section
+// Forgot signal(mutex)!
+
+All other processes will block forever!
+            </div>
+
+            <h3>4. Priority Inversion</h3>
+            <p>Low priority process holds lock needed by high priority process, while medium priority processes run.</p>
+            <ul>
+                <li><strong>Solution:</strong> Priority inheritance - temporarily boost low priority process</li>
+            </ul>
+        </div>
+
+        <div class="article-section">
+            <h2>Common Interview Questions</h2>
+
+            <h3>1. What is the difference between mutex and semaphore?</h3>
+            <p><strong>Answer:</strong></p>
+            <ul>
+                <li><strong>Mutex:</strong> Binary (locked/unlocked). Ownership - same thread must lock and unlock. Used for mutual exclusion.</li>
+                <li><strong>Semaphore:</strong> Can be counting. No ownership - any thread can signal. Used for signaling and resource counting.</li>
+            </ul>
+
+            <h3>2. What is a spinlock and when should it be used?</h3>
+            <p><strong>Answer:</strong> Spinlock busy-waits instead of sleeping. Use when:
+            <ul>
+                <li>Critical section is very short</li>
+                <li>In kernel mode where sleeping is expensive</li>
+                <li>On multiprocessor systems</li>
+            </ul>
+            Don't use for long critical sections (wastes CPU).</p>
+
+            <h3>3. Explain the producer-consumer problem.</h3>
+            <p><strong>Answer:</strong> Producer produces items into bounded buffer, consumer consumes from buffer. Need synchronization to:
+            <ul>
+                <li>Prevent producer from adding when buffer full</li>
+                <li>Prevent consumer from removing when buffer empty</li>
+                <li>Ensure mutual exclusion when accessing buffer</li>
+            </ul>
+            Use 3 semaphores: mutex (mutual exclusion), empty (count empty slots), full (count full slots).</p>
+
+            <h3>4. What is priority inversion?</h3>
+            <p><strong>Answer:</strong> When a high-priority task is blocked waiting for a resource held by a low-priority task, while medium-priority tasks run. Solution: priority inheritance or priority ceiling protocol.</p>
+
+            <h3>5. What are the requirements for a critical section solution?</h3>
+            <p><strong>Answer:</strong> Must satisfy three requirements:
+            <ul>
+                <li><strong>Mutual Exclusion:</strong> Only one process in CS at a time</li>
+                <li><strong>Progress:</strong> Selection of next process cannot be postponed indefinitely</li>
+                <li><strong>Bounded Waiting:</strong> Limit on number of times others can enter before a waiting process</li>
+            </ul></p>
+        </div>
+
+        <div class="article-section">
+            <h2>Summary</h2>
+            <ul>
+                <li><strong>Synchronization</strong> is essential for concurrent programming</li>
+                <li><strong>Critical section problem:</strong> Requires mutual exclusion, progress, bounded waiting</li>
+                <li><strong>Semaphores:</strong> Most widely used, can be binary or counting</li>
+                <li><strong>Mutex:</strong> Simplified binary semaphore with ownership</li>
+                <li><strong>Monitors:</strong> High-level construct, automatic mutual exclusion</li>
+                <li><strong>Classical problems:</strong> Readers-writers, dining philosophers, sleeping barber</li>
+                <li><strong>Modern languages:</strong> Provide built-in synchronization (synchronized in Java, lock in Python)</li>
+            </ul>
+        </div>
+
+        <a href="../index.html" class="back-link">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Articles
+        </a>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 OS Interview Prep. Built with passion for learning.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
