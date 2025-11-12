@@ -1,0 +1,250 @@
+import styles from '../article.module.css'
+
+export const metadata = {
+  title: 'Process vs Thread: Understanding the Core Differences | OS Interview Prep',
+  description: 'Deep dive into processes and threads, their differences, advantages, and when to use each in system design.',
+}
+
+export default function ProcessVsThread() {
+  return (
+    <>
+      <div className={styles.hero}>
+        <div className={styles.heroContent}>
+          <div className={styles.breadcrumb}>
+            <a href="/">Home</a>
+            <span>/</span>
+            <span>Process vs Thread</span>
+          </div>
+          <h1 className={styles.title}>Process vs Thread: Understanding the Core Differences</h1>
+          <div className={styles.meta}>
+            <span>8 min read</span>
+            <span>•</span>
+            <span>Processes & Threads</span>
+            <span>•</span>
+            <span>Fundamentals</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.content}>
+        <div className={styles.section}>
+          <h2>Introduction</h2>
+          <p>Understanding the difference between processes and threads is fundamental to operating systems knowledge and a common topic in technical interviews. Both are units of execution, but they differ significantly in how they're created, managed, and how they share resources.</p>
+
+          <div className={styles.infoBox}>
+            <h4>Key Takeaway</h4>
+            <p>A <strong>process</strong> is an independent program in execution with its own memory space, while a <strong>thread</strong> is a lightweight unit of execution within a process that shares the process's resources.</p>
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <h2>What is a Process?</h2>
+          <p>A process is an instance of a program in execution. When you run a program, the operating system creates a process that contains all the information needed to execute that program.</p>
+
+          <h3>Process Components</h3>
+          <p>Each process consists of:</p>
+          <ul>
+            <li><strong>Program Code (Text Section):</strong> The executable instructions of the program</li>
+            <li><strong>Data Section:</strong> Global and static variables</li>
+            <li><strong>Heap:</strong> Dynamically allocated memory during runtime</li>
+            <li><strong>Stack:</strong> Temporary data like function parameters, return addresses, and local variables</li>
+            <li><strong>Process Control Block (PCB):</strong> Metadata including process ID, program counter, CPU registers, memory management information</li>
+          </ul>
+
+          <h3>Process Characteristics</h3>
+          <ul>
+            <li>Each process has its own address space</li>
+            <li>Processes are isolated from each other (one process cannot access another's memory directly)</li>
+            <li>Heavy-weight: Creating a process requires significant overhead</li>
+            <li>Inter-process communication (IPC) is needed for processes to communicate</li>
+          </ul>
+        </div>
+
+        <div className={styles.section}>
+          <h2>What is a Thread?</h2>
+          <p>A thread is the smallest unit of execution within a process. Often called "lightweight processes," threads allow a program to perform multiple tasks concurrently within the same process.</p>
+
+          <h3>Thread Components</h3>
+          <p>Each thread has:</p>
+          <ul>
+            <li><strong>Thread ID:</strong> Unique identifier for the thread</li>
+            <li><strong>Program Counter:</strong> Address of the next instruction to execute</li>
+            <li><strong>Register Set:</strong> Current working variables</li>
+            <li><strong>Stack:</strong> Local variables and function call information</li>
+          </ul>
+
+          <h3>Shared Resources</h3>
+          <p>Threads within the same process share:</p>
+          <ul>
+            <li>Code section</li>
+            <li>Data section</li>
+            <li>Open files and signals</li>
+            <li>Heap memory</li>
+          </ul>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Key Differences</h2>
+
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Aspect</th>
+                <th>Process</th>
+                <th>Thread</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Definition</td>
+                <td>Independent program in execution</td>
+                <td>Lightweight unit within a process</td>
+              </tr>
+              <tr>
+                <td>Memory</td>
+                <td>Separate address space</td>
+                <td>Shares address space with other threads</td>
+              </tr>
+              <tr>
+                <td>Communication</td>
+                <td>IPC mechanisms (pipes, sockets, shared memory)</td>
+                <td>Direct access to shared memory</td>
+              </tr>
+              <tr>
+                <td>Creation Time</td>
+                <td>Slower (heavyweight)</td>
+                <td>Faster (lightweight)</td>
+              </tr>
+              <tr>
+                <td>Context Switching</td>
+                <td>Expensive (requires saving entire process state)</td>
+                <td>Less expensive (minimal state to save)</td>
+              </tr>
+              <tr>
+                <td>Isolation</td>
+                <td>Highly isolated</td>
+                <td>Not isolated (share memory)</td>
+              </tr>
+              <tr>
+                <td>Resource Usage</td>
+                <td>More resources required</td>
+                <td>Fewer resources required</td>
+              </tr>
+              <tr>
+                <td>Termination</td>
+                <td>Terminating a process kills all its threads</td>
+                <td>Individual threads can be terminated</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Advantages and Disadvantages</h2>
+
+          <h3>Process Advantages</h3>
+          <ul>
+            <li><strong>Isolation:</strong> Crashes in one process don't affect others</li>
+            <li><strong>Security:</strong> Better protection between processes</li>
+            <li><strong>Stability:</strong> Easier to manage and debug</li>
+          </ul>
+
+          <h3>Process Disadvantages</h3>
+          <ul>
+            <li><strong>Overhead:</strong> Higher memory and time overhead</li>
+            <li><strong>Communication:</strong> Complex IPC mechanisms required</li>
+            <li><strong>Context Switching:</strong> Expensive operation</li>
+          </ul>
+
+          <h3>Thread Advantages</h3>
+          <ul>
+            <li><strong>Performance:</strong> Fast creation and context switching</li>
+            <li><strong>Resource Sharing:</strong> Efficient sharing of memory and resources</li>
+            <li><strong>Responsiveness:</strong> Can keep application responsive while performing background tasks</li>
+            <li><strong>Scalability:</strong> Better utilization of multicore processors</li>
+          </ul>
+
+          <h3>Thread Disadvantages</h3>
+          <ul>
+            <li><strong>Complexity:</strong> Requires careful synchronization</li>
+            <li><strong>Debugging:</strong> Race conditions and deadlocks are harder to detect</li>
+            <li><strong>Stability:</strong> A bug in one thread can crash the entire process</li>
+          </ul>
+        </div>
+
+        <div className={styles.section}>
+          <h2>When to Use Processes vs Threads</h2>
+
+          <div className={styles.highlightBox}>
+            <h4>Use Processes When:</h4>
+            <ul>
+              <li>You need strong isolation between tasks</li>
+              <li>Tasks are independent and don't need to share much data</li>
+              <li>Security and stability are critical</li>
+              <li>You want to run different programs (e.g., web browser running multiple applications)</li>
+            </ul>
+          </div>
+
+          <div className={styles.infoBox}>
+            <h4>Use Threads When:</h4>
+            <ul>
+              <li>Tasks need to share data frequently</li>
+              <li>You need fast task creation and switching</li>
+              <li>You're implementing concurrent operations in the same application</li>
+              <li>You want to maximize CPU utilization on multicore systems</li>
+              <li>Example: Web server handling multiple client requests</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Real-World Examples</h2>
+
+          <h3>Process Example: Web Browser</h3>
+          <p>Modern browsers like Chrome use separate processes for each tab. This means:</p>
+          <ul>
+            <li>If one tab crashes, others continue working</li>
+            <li>Each tab is isolated for security</li>
+            <li>Better stability but higher memory usage</li>
+          </ul>
+
+          <h3>Thread Example: Word Processor</h3>
+          <p>A word processor might use multiple threads:</p>
+          <ul>
+            <li>Main thread for user interface</li>
+            <li>Background thread for spell checking</li>
+            <li>Another thread for auto-saving</li>
+            <li>All threads share the document data</li>
+          </ul>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Common Interview Questions</h2>
+
+          <h3>1. Can a process have multiple threads?</h3>
+          <p><strong>Answer:</strong> Yes, a process can have multiple threads. This is called multithreading. All threads within a process share the same address space but have their own stack and registers.</p>
+
+          <h3>2. What happens when a thread crashes?</h3>
+          <p><strong>Answer:</strong> When a thread crashes, it typically brings down the entire process and all its threads, because they share the same memory space. This is unlike processes, where one process crashing doesn't affect others.</p>
+
+          <h3>3. Why is thread context switching faster than process context switching?</h3>
+          <p><strong>Answer:</strong> Thread context switching is faster because threads share the same address space. The OS doesn't need to switch memory mappings, flush TLB (Translation Lookaside Buffer), or reload page tables, which are required for process context switching.</p>
+
+          <h3>4. What are user-level threads vs kernel-level threads?</h3>
+          <p><strong>Answer:</strong></p>
+          <ul>
+            <li><strong>User-level threads:</strong> Managed by user-level libraries without kernel knowledge. Fast to create and manage but can't take advantage of multicore systems effectively.</li>
+            <li><strong>Kernel-level threads:</strong> Managed by the OS kernel. Slower to create but can utilize multiple processors and provide better concurrency.</li>
+          </ul>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Summary</h2>
+          <p>Understanding processes and threads is crucial for system design and optimization. Processes provide isolation and stability, making them ideal for independent tasks and security-critical applications. Threads offer performance and resource sharing, making them perfect for concurrent operations within a single application.</p>
+
+          <p>The choice between processes and threads depends on your specific requirements: isolation vs. performance, stability vs. resource efficiency, and the nature of the tasks you're trying to execute concurrently.</p>
+        </div>
+      </div>
+    </>
+  )
+}

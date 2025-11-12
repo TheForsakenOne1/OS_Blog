@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Circular+Std:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+:root {
+  --airbnb-red: #FF385C;
+  --airbnb-red-dark: #E61E4D;
+  --airbnb-red-light: #FF5A5F;
+  --text-primary: #222222;
+  --text-secondary: #717171;
+  --text-light: #EBEBEB;
+  --border-color: #DDDDDD;
+  --bg-gray: #F7F7F7;
+  --white: #FFFFFF;
+  --black: #000000;
+  --shadow-small: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
+  --shadow-medium: 0 2px 4px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-large: 0 6px 16px rgba(0,0,0,0.12);
+  --shadow-hover: 0 2px 16px rgba(0,0,0,0.12);
+  --transition: all 0.2s ease;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Circular Std', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  color: var(--text-primary);
+  background: var(--white);
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection Color */
+::selection {
+  background: var(--airbnb-red-light);
+  color: var(--white);
+}
+
+/* Focus Styles */
+*:focus {
+  outline: 2px solid var(--airbnb-red);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-primary);
+}

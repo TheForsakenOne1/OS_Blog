@@ -1,0 +1,104 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--white);
+  border-bottom: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.navbar.scrolled {
+  border-bottom-color: var(--border-color);
+  box-shadow: var(--shadow-small);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.logoText {
+  display: none;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.navLink {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: var(--transition);
+  padding: 8px 0;
+  position: relative;
+}
+
+.navLink:hover {
+  color: var(--airbnb-red);
+}
+
+.navLink::after {
+  content: '';
+  position: absolute;
+  bottom: -28px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--airbnb-red);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.navLink:hover::after {
+  transform: scaleX(1);
+}
+
+@media (min-width: 640px) {
+  .logoText {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 40px;
+  }
+
+  .nav {
+    gap: 40px;
+  }
+
+  .navLink {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 80px;
+  }
+}
