@@ -30,10 +30,13 @@ export default function Navbar() {
           <Link href="/" className={styles.navLink}>
             Articles
           </Link>
-          <Link href="#topics" className={styles.navLink}>
-            Topics
+          <Link href="/roadmap" className={styles.navLink}>
+            Roadmap
           </Link>
-          <Link href="#about" className={styles.navLink}>
+          <Link href="/resources" className={styles.navLink}>
+            Resources
+          </Link>
+          <Link href="/about" className={styles.navLink}>
             About
           </Link>
         </div>

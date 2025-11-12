@@ -1,4 +1,3 @@
-import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import ArticleCard from './components/ArticleCard'
 import styles from './page.module.css'
@@ -88,9 +87,7 @@ const articles = [
 
 export default function Home() {
   return (
-    <>
-      <Navbar />
-      <main>
+    <main>
         <Hero />
 
         <section className={styles.articles}>
@@ -143,6 +140,5 @@ export default function Home() {
           </div>
         </footer>
       </main>
-    </>
   )
 }
